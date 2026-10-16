@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>رفيق مساعد</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;background:#101827;color:white;
+  font-family:Arial,sans-serif;text-align:center;
+  min-height:100vh;padding:24px 16px;
+}
+h1{color:#70e1c1;margin-top:35px}
+p{color:#cbd5e1;line-height:1.8}
+.card{
+  max-width:480px;margin:25px auto;padding:24px;
+  background:#1e293b;border-radius:24px;
+  border:1px solid #334155;
+}
+#mic{
+  width:120px;height:120px;border:0;border-radius:50%;
+  background:#16a085;color:white;font-size:48px;
+  margin:24px;cursor:pointer;
+}
+#mic:active{transform:scale(.96)}
+button.small{
+  background:#334155;color:white;border:0;
+  border-radius:12px;padding:12px 18px;
+  font-size:16px;margin:5px;cursor:pointer;
+}
+#status{color:#70e1c1;min-height:24px}
+#answer{font-size:19px;line-height:1.8;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<h1>🤖 رفيق مساعد</h1>
+<p>مساعدك الشخصي — اتكلم وأنا أسمعك!</p>
+
+<div class="card">
+  <p id="status">اضغط على الميكروفون وابدأ كلامك</p>
+  <button id="mic" aria-label="ابدأ التحدث">🎙️</button>
+  <div id="answer">أهلًا بيك! أنا رفيق، أقدر أساعدك.</div>
+  <hr style="border-color:#334155;margin:24px 0">
+  <button class="small" id="hello">عرّفني بنفسك</button>
+  <button class="small" id="time">الساعة كام؟</button>
+  <button class="small" id="help">أوامري إيه؟</button>
+</div>
+
+<p>نسخة تجريبية مجانية</p>
+
+<script>
+const statusText = document.getElementById('status');
+const answer = document.getElementById('answer');
+const mic = document.getElementById('mic');
+
+function speak(text) {
+  answer.textContent = text;
+  if (!('speechSynthesis' in window)) {
+    statusText.textContent = 'القراءة الصوتية غير مدعومة هنا';
+    return;
+  }
+  speechSynthesis.cancel();
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.lang = 'ar-EG';
+  msg.rate = 1;
+  speechSynthesis.speak(msg);
+}
+
+function respond(text) {
+  const t = text.toLowerCase();
+  if (t.includes('اسمك') || t.includes('عرفني') || t.includes('نفسك')) {
+    speak('أنا رفيق، مساعدك الشخصي. سعيد إني أتكلم معاك!');
+  } else if (t.includes('الساعة') || t.includes('الوقت')) {
+    speak('الساعة الآن ' +
+      new Date().toLocaleTimeString('ar-EG',{hour:'numeric',minute:'2-digit'}));
+  } else if (t.includes('التاريخ') || t.includes('النهارده')) {
+    speak('تاريخ اليوم ' +
+      new Date().toLocaleDateString('ar-EG'));
+  } else if (t.includes('السلام عليكم') || t.includes('سلام')) {
+    speak('وعليكم السلام ورحمة الله وبركاته!');
+  } else if (t.includes('اسم') && t.includes('اسمي')) {
+    speak('أهلاً بيك يا صديقي!');
+  } else if (t.includes('شكرا') || t.includes('شكرًا')) {
+    speak('العفو! أنا موجود لمساعدتك.');
+  } else if (t.includes('ساعدني') || t.includes('مساعدة') || t.includes('أوامر')) {
+    speak('تقدر تسألني عن الساعة والتاريخ، أو تطلب مني التعريف بنفسي.');
+  } else {
+    speak('سمعتك بتقول: ' + text +
+      '. لسه بتعلّم أفهم أوامر أكتر، جرّب تسألني عن الساعة.');
+  }
+}
+
+const Recognition = window.SpeechRecognition ||
+                    window.webkitSpeechRecognition;
+
+mic.addEventListener('click', () => {
+  if (!Recognition) {
+    statusText.textContent =
+      'التعرف على الصوت غير مدعوم في هذا المتصفح. جرّب Chrome.';
+    return;
+  }
+  const recognition = new Recognition();
+  recognition.lang = 'ar-EG';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    statusText.textContent = 'سامعك... اتكلم دلوقتي 🎧';
+    mic.textContent = '🔴';
+  };
+  recognition.onresult = (event) => {
+    const words = event.results[0][0].transcript;
+    statusText.textContent = 'إنت قلت: ' + words;
+    respond(words);
+  };
+  recognition.onerror = () => {
+    statusText.textContent =
+      'الصوت لم يعمل. راجع إذن الميكروفون واتصال الإنترنت.';
+  };
+  recognition.onend = () => { mic.textContent = '🎙️'; };
+  try { recognition.start(); }
+  catch(e) {
+    statusText.textContent = 'استنى لحظة وجرب تضغط تاني.';
+  }
+});
+
+document.getElementById('hello').onclick =
+  () => speak('أنا رفيق، مساعدك الشخصي. أقدر أساعدك في بعض المهام.');
+document.getElementById('time').onclick =
+  () => respond('الساعة كام');
+document.getElementById('help').onclick =
+  () => respond('أوامر المساعدة');
+</script>
+</body>
+  </html>
+  
